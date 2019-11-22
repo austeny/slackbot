@@ -1,66 +1,59 @@
-const { Botkit } = require('botkit');
-const { SlackAdapter } = require('botbuilder-adapter-slack');
+const express = require("express");
+const app = express();
+const bodyParser = require('body-parser');
+const urlencodedParser = bodyParser.urlencoded({ extended: false })
+
+// SETUP SLACK API
+const { createEventAdapter } = require('@slack/events-api');
+const { WebClient } = require('@slack/client');
+
+//SET PORT AND GET ENV VARIABLES
+const port = 8080;
 require('dotenv').config();
 
-if (!process.env.CLIENT_ID || !process.env.CLIENT_SECRET || !process.env.PORT || !process.env.VERIFICATION_TOKEN) {
-    console.log('Error: Specify CLIENT_ID, CLIENT_SECRET, VERIFICATION_TOKEN and PORT in environment');
-    process.exit(1);
-} else {
-    console.log('Good job, you have the variables!')
-}
+const slackEvents = createEventAdapter(process.env.SLACK_SIGNING_SECRET);
+const web = new WebClient(process.env.SLACK_TOKEN);
+app.use('/events', slackEvents.requestListener());
 
-const adapter = new SlackAdapter({
-    clientSigningSecret: process.env.CLIENT_SIGNING_SECRET,
-    botToken: process.env.BOT_TOKEN
-});
+(async ()=> {
+    
+    
+})();
 
-const controller = new Botkit({
-    adapter,
-    // json_file_store: './db_slackbutton_slash_command/',
-    // debug: true
+app.use(bodyParser.json());
+
+app.post('/botstatus', urlencodedParser, (req, res) => {
+    console.log(req.body);
+    (async () => {
+        let user_info = await web.users.info({
+            user: req.body.user_id
+        });
+        let real_name = user_info.user.real_name;
+        console.log(real_name); 
+
+        let users = await web.users.list();
+        console.log(users);
+    
+    // let real_name = getUser(req.body.user_id);
+    // console.log(`after func ${real_name}`);
+
+    let message = { text: `I love caroline! \n -${real_name}`};
+    res.json(message);
+    })();
 })
 
-let bot = await controller.spawn('TJJTT1PLG');
-
-/* Legacy Real Time Messaging, Slack reccomends using Event API now
-controller.configureSlackApp({
-    clientId: process.env.CLIENT_ID,
-    clientSecret: process.env.CLIENT_SECRET,
-    clientSigningSecret: process.env.CLIENT_SIGNING_SECRET,
-    scopes: ['commands', 'bot'],
-})
-
-var bot = controller.spawn({
-    token: process.env.BOT_TOKEN,
-    incoming_webhook: {
-        url: 'WE_WILL_GET_TO_THIS'
-    }
-}).startRTM();
-
-controller.setupWebserver(process.env.PORT, function(err, webserver){
-    controller.createWebhookEndpoints(controller.webserver);
-    controller.createOauthEndpoints(controller.webserver, function(err, req, res) {
-        if (err) {
-            res.status(500).send('ERROR: ' + err);
-        } else {
-            res.send('Success!');
-        }
-    });
-});
-*/
-
-controller.hears('hi', 'direct_message', function(bot, message){
-    bot.reply(message, 'hello');
-})
-
-controller.on('slash_command', function(bot, message) {
-    console.log('/echo called');
-    bot.replyAcknowledge()
-    switch (message.command) {
-        case '/echo':
-        bot.reply(message, 'heard ya!')
-        break;
-    default: 
-        bot.reply(message, 'Did not recognize that command, sorry!')
+slackEvents.on('message', (event) => {
+    console.log(`Received a message event: user ${event.user} in channel ${event.channel} says ${event.text}`);
+    console.log(event);
+    // if(event.user_id == "UJ7ECSSPM"){
+    // if(!event.bot_id){
+        web.chat.postMessage({
+            channel: event.channel,
+            text: ""
+        })
     }
 });
+
+app.listen(port, process.env.IP, () => {
+    console.log(`Sever on port ${port}`);
+})
