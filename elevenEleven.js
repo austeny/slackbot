@@ -7,7 +7,7 @@ const web = new WebClient(process.env.SLACK_TOKEN);
 
 const giphy = {
     baseURL: "https://api.giphy.com/v1/gifs/",
-    apiKey: "0UTRbFtkMxAplrohufYco5IY74U8hOes",
+    apiKey: process.env.GIPHY_API_KEY,
     tag: "party",
     type: "random",
     rating: "pg-13"
@@ -23,7 +23,7 @@ let giphyURL = encodeURI(
             method: 'GET',
         });
         res = JSON.parse(res);
-        console.log(res.data.url);
+	console.log(res);
 
         await web.chat.postMessage({
             channel: 'DJJT4G8MT',
