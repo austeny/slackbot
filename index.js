@@ -1,8 +1,6 @@
 const d = new Date();
 const request = require('request-promise');
-require('dotenv').config();
-
-const hook = process.env.SLACK_WEBHOOK;
+const hook = 'TJJTT1PLG/BQX7RCQL9/eeKyJJjKSLmakKaSTeiQS3XV';
 
 // const getData = async function(){
 //     const json = await request({
